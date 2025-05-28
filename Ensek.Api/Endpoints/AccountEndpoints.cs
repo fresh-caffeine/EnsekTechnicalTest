@@ -13,4 +13,3 @@ public static class AccountEndpoints
            .WithTags("Accounts");
     }
 }
-

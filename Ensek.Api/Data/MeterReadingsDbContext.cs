@@ -5,6 +5,7 @@ namespace Ensek.Api.Data;
 
 public class MeterReadingsDbContext(DbContextOptions<MeterReadingsDbContext> options) : DbContext(options)
 {
+    
     public DbSet<Account> Accounts { get; set; } = null!;
     public DbSet<MeterReading> MeterReadings { get; set; } = null!;
 
