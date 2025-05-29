@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Ensek.Api.Models;
 
 public class MeterReading
@@ -8,4 +10,7 @@ public class MeterReading
     public decimal ReadingValue { get; set; }
     
     public Account Account { get; set; } = null!; // Navigation property to Account
+  
+    [NotMapped]
+    public int RowNumber { get; set; }
 }

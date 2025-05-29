@@ -2,20 +2,20 @@ using System.Globalization;
 using CsvHelper.Configuration;
 using Ensek.Api.Models;
 
-namespace Ensek.Api.Services;
+namespace Ensek.Api.Mappers;
 
-public sealed class MeterReadingCsvRowMap : ClassMap<MeterReadingCsvRow>
+public sealed class MeterReadingClassMap : ClassMap<MeterReading>
 {
-    public MeterReadingCsvRowMap()
+    public MeterReadingClassMap()
     {
-        Map(m => m.MeterReadingDateTime)
+        Map(m => m.ReadingDate)
             .Name("MeterReadingDateTime")
             .TypeConverterOption
             .DateTimeStyles(DateTimeStyles.AssumeLocal)
             .TypeConverterOption
             .Format("dd/MM/yyyy HH:mm");
         Map(m => m.AccountId).Name("AccountId");
-        Map(m => m.MeterReadValue).Name("MeterReadValue");
-        Map(m => m.Rownumber).Ignore();
+        Map(m => m.ReadingValue).Name("MeterReadValue");
+        Map(m => m.RowNumber).Ignore();
     }
 }

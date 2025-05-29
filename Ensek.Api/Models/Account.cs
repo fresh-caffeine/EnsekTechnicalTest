@@ -6,5 +6,5 @@ public class Account
     public required string FirstName { get; set; }
     public required string LastName { get; set; }
     
-    public List<MeterReading> MeterReadings { get; set; } = [];
+    public List<MeterReading> MeterReadings { get; set; } = []; // Navigation property to MeterReadings
 }

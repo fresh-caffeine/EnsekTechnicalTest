@@ -1,6 +1,7 @@
 using Ensek.Api.Data;
 using Ensek.Api.Extensions;
 using Ensek.Api.Services;
+using Ensek.Api.Validators;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -14,6 +15,11 @@ builder.Services.AddDbContext<MeterReadingsDbContext>(
 // builder.Services.AddAuthorization();
 // builder.Services.AddAntiforgery();
 
+
+builder.Services.AddScoped<IAccountDbService, AccountDbService>();
+builder.Services.AddScoped<IRowValidator, MeterReadingRowValidator>();
+builder.Services.AddScoped<IFileValidator, MeterReadingFileValidator>();
+builder.Services.AddScoped<ICsvParser, MeterReadingCsvParser>();
 builder.Services.AddScoped<IMeterReadingService, MeterReadingService>();
 builder.Services.AddScoped<IMeterReadingDbService, MeterReadingDbService>();
     

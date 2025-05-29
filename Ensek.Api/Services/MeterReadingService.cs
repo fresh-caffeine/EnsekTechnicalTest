@@ -1,83 +1,66 @@
-using System.Globalization;
-using CsvHelper;
-using CsvHelper.Configuration;
 using Ensek.Api.Models;
+using Ensek.Api.Validators;
 
 namespace Ensek.Api.Services;
 
-public interface IMeterReadingService
-{
-    public Task<IResult> ProcessMeterReadingFile(IFormFile file);
-}
-
 public class MeterReadingService(
     ILogger<MeterReadingService> logger,
+    IFileValidator fileValidator,
+    ICsvParser csvParser,
+    IRowValidator rowValidator,
     IMeterReadingDbService meterReadingDbService
     ): IMeterReadingService
 {
-    private const int MeterMaxValue = 99999;
     
-    public async Task<IResult> ProcessMeterReadingFile(IFormFile file)
+    public async Task<IResult> ProcessMeterReadingFile(IFormFile? file)
     {
         // Read the CSV file
-        if (!IsFileFormatValid(file, out var badRequest) && badRequest != null)
+        if (!fileValidator.IsValid(file, out var errorList))
         {
-            return badRequest;
+            var errorMessages = errorList ?? [];
+            logger.LogError("Error processing file: {Errors}", string.Join(", ", errorMessages));  
+            return BadRequestResponse(errorMessages);
         }
 
-        logger.LogInformation("Processing file: {FileName}", file.FileName);
         try
         {
-            var processedRows = 0;
-            List<RowError> failedRows = [];
-            List<MeterReadingCsvRow> meterReadings = [];
+            var parseResult = await csvParser.ParseAsync(file!);
             
-            using var reader = new StreamReader(file.OpenReadStream());
-            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            if (parseResult.HasErrors)
             {
-                HasHeaderRecord = true
-            });
-            csv.Context.RegisterClassMap<MeterReadingCsvRowMap>();
-
-            // Read the CSV records     
-            var rows =  csv.GetRecordsAsync<MeterReadingCsvRow>();
+                logger.LogError("Error parsing file: {Errors}", string.Join(", ", parseResult.Errors));
+                return BadRequestResponse(parseResult.Errors);
+            }
             
-            await foreach (var record in rows)
+            List<CsvRowError> failedRows = [];
+            
+            foreach (var record in parseResult.Records)
             {
-                record.Rownumber = csv.Context.Parser!.Row;
-                processedRows++;
-                logger.LogInformation("Processing record: {AccountId}", record.AccountId);
-                var rowNumber = csv.Context.Parser?.Row ?? 0;
-                if (!IsRowValid(record, out var errorMessages))
+                var errors = rowValidator.Validate(record);
+                if (errors.Count != 0)
                 {
-                    logger.LogWarning("Invalid record: {ErrorMessage}", errorMessages);
-                    failedRows.AddRange(errorMessages);
-                    continue; // Skip to the next record
+                    failedRows.AddRange(errors);
+                    continue;
                 }
-                meterReadings.Add(record);
+                
+                var insertResult = await meterReadingDbService.AddMeterReadingAsync(record);
+
+                if (insertResult.HasErrors)
+                {
+                    failedRows.AddRange(insertResult.Errors);
+                }
             }
             
-            logger.LogInformation("File processed successfully: {FileName}", file.FileName);
-            
-            var insertResult = await meterReadingDbService.AddMeterReadingsAsync(meterReadings);
-            
-            if (insertResult.HasErrors)
-            {
-                logger.LogWarning("Some records failed to insert: {ErrorCount}", insertResult.Errors.Count);
-                failedRows.AddRange(insertResult.Errors);
-            }
-            else
-            {
-                logger.LogInformation("All records inserted successfully.");
-            }
+            logger.LogInformation("Parsed {TotalRows} rows, {InvalidRows} invalid",
+                parseResult.Records.Count, failedRows.Count);
             
             var failedRowsCount = failedRows.DistinctBy(x => x.RowNumber).Count();
-            
+
             return Results.Ok(new
             {
                 Message = "File processed successfully",
-                RecordCount = processedRows,
-                SucccessRecordCount = processedRows - failedRowsCount,
+                RecordCount = parseResult.Records.Count,
+                SuccessRecordCount = parseResult.Records.Count - failedRowsCount,
                 FailedRecordCount = failedRowsCount,
                 Errors = failedRows.OrderBy(x => x.RowNumber)
             });
@@ -85,63 +68,17 @@ public class MeterReadingService(
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            return Results.BadRequest("Error processing file: " + e.Message);
+            logger.LogError(e, "Error processing file");
+            return BadRequestResponse([e.Message]);
         }
     }
 
-    private static bool IsRowValid(MeterReadingCsvRow row, out List<RowError> errorMessages)
+    private static IResult BadRequestResponse(IEnumerable<string> badRequest)
     {
-        List<string> errorMessageList = [];
-
-        if (row.AccountId <= 0)
+        return Results.BadRequest(new
         {
-            errorMessageList.Add("Invalid AccountId: " + row.AccountId);
-        }
-        
-        if (row.MeterReadValue is <= 0 or > MeterMaxValue)
-        {
-            errorMessageList.Add("Invalid MeterReadValue: " + row.MeterReadValue);
-        }
-        
-        if (row.MeterReadingDateTime == default)
-        {
-            errorMessageList.Add("Invalid MeterReadingDateTime: " + row.MeterReadingDateTime);
-        }
-        
-        if (row.MeterReadingDateTime > DateTime.Today)
-        {
-            errorMessageList.Add("Invalid MeterReadingDateTime: " + row.MeterReadingDateTime);
-        }
-
-        errorMessages = errorMessageList.Select(x => new RowError(row.Rownumber, x)).ToList();
-        return errorMessageList.Count == 0;
+            Message = "Error processing file",
+            Errors = badRequest
+        });
     }
-
-    private bool IsFileFormatValid(IFormFile? file, out IResult? badRequest)
-    {
-        if (file == null || file.Length == 0)
-        {
-            logger.LogError("No file uploaded or file is empty.");
-            badRequest = Results.BadRequest("No file uploaded or file is empty.");
-            return false;
-        }
-
-        // Convert the file to a stream and read it using CsvHelper
-        if (file.ContentType != "text/csv")
-        {
-            logger.LogError("Invalid file type. Only CSV files are allowed.");
-            badRequest = Results.BadRequest("Invalid file type. Only CSV files are allowed.");
-            return false;
-        }
-
-        badRequest = null;
-        return true;
-    }
-    
-
-
-    
-    
-    
 }

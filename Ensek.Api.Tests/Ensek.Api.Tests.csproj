@@ -26,4 +26,8 @@
       <ProjectReference Include="..\Ensek.Api\Ensek.Api.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Data\" />
+    </ItemGroup>
+
 </Project>
