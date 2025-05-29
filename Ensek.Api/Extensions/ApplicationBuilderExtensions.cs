@@ -7,39 +7,39 @@ namespace Ensek.Api.Extensions;
 
 public static class ApplicationBuilderExtensions
 {
-    public static void MapEndpoints(this IEndpointRouteBuilder app)
+    public static void MapEndpoints(this WebApplication app)
     {
-        AccountEndpoints.MapAccountEndpoints(app);
-        MeterReadingEndpoints.MapAccountEndpoints(app);
+        app.Logger.LogInformation("Mapping endpoints...");
+        app.MapMeterReadingEndpoints();
     }
     
-    public static IServiceProvider MigrateDatabase(this IServiceProvider serviceProvider)
+    public static WebApplication MigrateDatabase(this WebApplication app)
     {
-        using var scope = serviceProvider.CreateScope();
+        using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MeterReadingsDbContext>();
         db.Database.Migrate();
         
-        return serviceProvider;
+        return app;
     }
 
-    public static void SeedAccountsFromCsv(this IServiceProvider serviceProvider, string csvFilePath)
+    public static void SeedAccountsFromCsv(this WebApplication app, string csvFilePath)
     {
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger("AccountSeeder");
-        using var scope = serviceProvider.CreateScope();
+        var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
+        
+        using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MeterReadingsDbContext>();
         var csvPath = Path.Combine(Directory.GetCurrentDirectory(), csvFilePath);
         
         var result = AccountSeeder.Seed(db, csvPath, loggerFactory);
         if (result.IsSuccessful)
         {
-            logger.LogInformation("Successfully seeded {TotalRecords} accounts from {FilePath}.", 
+            app.Logger.LogInformation("Successfully seeded {TotalRecords} accounts from {FilePath}.", 
                 result.TotalRecords,
                 csvFilePath);
         }
         else
         {
-            logger.LogError("Failed to seed accounts from {csvFilePath}. Errors: {Errors}", 
+            app.Logger.LogError("Failed to seed accounts from {csvFilePath}. Errors: {Errors}", 
                 csvFilePath,
                 string.Join(", ", result.Errors));
         }

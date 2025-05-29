@@ -1,4 +1,5 @@
 using Ensek.Api.Data;
+using Ensek.Api.Models;
 
 namespace Ensek.Api.Tests.Data;
 

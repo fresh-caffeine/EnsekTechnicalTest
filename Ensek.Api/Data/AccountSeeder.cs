@@ -31,7 +31,7 @@ public static class AccountSeeder
                 HasHeaderRecord = true
             });
 
-            var csvRecords = csv.GetRecords<AccountCsvRecord>();
+            var csvRecords = csv.GetRecords<AccountCsvRow>();
             var accounts = csvRecords.Select(record => new Account //TODO: Use Mapper
             {
                 AccountId = record.AccountId,

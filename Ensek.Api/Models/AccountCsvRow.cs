@@ -1,6 +1,6 @@
 namespace Ensek.Api.Models;
 
-public class AccountCsvRecord
+public class AccountCsvRow
 {
     public int AccountId { get; set; }
     public string FirstName { get; set; } = string.Empty;

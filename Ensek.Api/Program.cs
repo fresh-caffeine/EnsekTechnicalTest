@@ -1,6 +1,6 @@
 using Ensek.Api.Data;
-using Ensek.Api.Endpoints;
 using Ensek.Api.Extensions;
+using Ensek.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -11,15 +11,19 @@ builder.Services.AddDbContext<MeterReadingsDbContext>(
 );
 
 // Add services to the container.
-builder.Services.AddAuthorization();
+// builder.Services.AddAuthorization();
+// builder.Services.AddAntiforgery();
 
+builder.Services.AddScoped<IMeterReadingService, MeterReadingService>();
+builder.Services.AddScoped<IMeterReadingDbService, MeterReadingDbService>();
+    
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
-app.Services
-    .MigrateDatabase()
-    .SeedAccountsFromCsv("Test_Accounts.csv");
+
+app.MigrateDatabase();
+app.SeedAccountsFromCsv("Test_Accounts.csv");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -30,7 +34,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
+// app.UseAuthorization();
+// app.UseAntiforgery();
 
 app.MapEndpoints();
 

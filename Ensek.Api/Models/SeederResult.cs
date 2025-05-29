@@ -1,4 +1,4 @@
-namespace Ensek.Api.Data;
+namespace Ensek.Api.Models;
 
 public class SeederResult
 {
