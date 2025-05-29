@@ -5,44 +5,52 @@ using Ensek.Api.Validators;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
-var builder = WebApplication.CreateBuilder(args);
+namespace Ensek.Api;
 
-builder.Services.AddDbContext<MeterReadingsDbContext>(
-    options => options.UseSqlite(builder.Configuration.GetConnectionString("MeterReadingsDb"))
-);
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+
+        builder.Services.AddDbContext<MeterReadingsDbContext>(
+            options => options.UseSqlite(builder.Configuration.GetConnectionString("MeterReadingsDb"))
+        );
 
 // Add services to the container.
 // builder.Services.AddAuthorization();
 // builder.Services.AddAntiforgery();
 
 
-builder.Services.AddScoped<IAccountDbService, AccountDbService>();
-builder.Services.AddScoped<IRowValidator, MeterReadingRowValidator>();
-builder.Services.AddScoped<IFileValidator, MeterReadingFileValidator>();
-builder.Services.AddScoped<ICsvParser, MeterReadingCsvParser>();
-builder.Services.AddScoped<IMeterReadingService, MeterReadingService>();
-builder.Services.AddScoped<IMeterReadingDbService, MeterReadingDbService>();
+        builder.Services.AddScoped<IAccountDbService, AccountDbService>();
+        builder.Services.AddScoped<IRowValidator, MeterReadingRowValidator>();
+        builder.Services.AddScoped<IFileValidator, MeterReadingFileValidator>();
+        builder.Services.AddScoped<ICsvParser, MeterReadingCsvParser>();
+        builder.Services.AddScoped<IMeterReadingService, MeterReadingService>();
+        builder.Services.AddScoped<IMeterReadingDbService, MeterReadingDbService>();
     
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+        builder.Services.AddOpenApi();
 
-var app = builder.Build();
+        var app = builder.Build();
 
-app.MigrateDatabase();
-app.SeedAccountsFromCsv("Test_Accounts.csv");
+        app.MigrateDatabase();
+        app.SeedAccountsFromCsv("Test_Accounts.csv");
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.MapScalarApiReference();
-}
+        if (app.Environment.IsDevelopment())
+        {
+            app.MapOpenApi();
+            app.MapScalarApiReference();
+        }
 
-app.UseHttpsRedirection();
+        app.UseHttpsRedirection();
 
 // app.UseAuthorization();
 // app.UseAntiforgery();
 
-app.MapEndpoints();
+        app.MapEndpoints();
 
-app.Run();
+        app.Run();
+    }
+}
