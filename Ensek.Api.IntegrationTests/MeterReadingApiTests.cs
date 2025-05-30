@@ -166,18 +166,45 @@ public class MeterReadingApiTests
         });
     }
     
+    [TestCase("no-extension", "text/plain")]
+    [TestCase("im-a.xls", "application/vnd.ms-excel")]
+    [TestCase("im-a.xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    [TestCase("im-a.txt", "text/plain" )]
+    [TestCase("im-a.pdf", "application/pdf")]
+    [TestCase("im-a.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")]
+    [TestCase("im-a.jpeg", "image/jpeg")]
+    public async Task UploadCsvFile_InvalidFileExtension_Fails(string filename, string mimeType)
+    {
+        const string csv = """
+                           AccountId,MeterReadingDateTime,MeterReadValue
+                           9999,22/04/2024 08:24,100
+                           """;
+
+        var result = await CreateAndUploadCsvAsync(csv, filename, mimeType);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Response.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.BadRequest));
+            
+            Assert.That(result.FailureContent, Is.Not.Null);
+            Assert.That(result.FailureContent!.Errors, Has.Count.EqualTo(1));
+            
+            Assert.That(_dbContext.MeterReadings.Any(), Is.False);
+        });
+    }
+    
     private void SeedAccount(int accountId, string firstName = "John", string lastName = "Doe")
     {
         _dbContext.Accounts.Add(new Account { AccountId = accountId, FirstName = firstName, LastName = lastName });
         _dbContext.SaveChanges();
     }
     
-    private async Task<UploadCsvResult> CreateAndUploadCsvAsync(string csv)
+    private async Task<UploadCsvResult> CreateAndUploadCsvAsync(string csv, string fileName = "meterreadings.csv", string mimeType = "text/csv")
     {
         var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes(csv));
-        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mimeType);
         var form = new MultipartFormDataContent();
-        form.Add(fileContent, "file", "meterreadings.csv");
+        form.Add(fileContent, "file", fileName);
 
         var response = await _client.PostAsync("/meter-reading-uploads", form);
         var responseContent = await response.Content.ReadAsStringAsync();

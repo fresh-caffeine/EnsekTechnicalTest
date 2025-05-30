@@ -10,6 +10,7 @@ public class MeterReadingFileValidator(
         
         if (file == null || file.Length == 0)
         {
+            logger.LogError("File validation failed: No file uploaded or file is empty.");
             errors.Add("No file uploaded or file is empty.");
             validationErrors = errors;
             return errors.Count == 0;
@@ -17,6 +18,7 @@ public class MeterReadingFileValidator(
 
         if (file.ContentType != "text/csv")
         {
+            logger.LogError("File validation failed: Invalid file type. Only CSV files are allowed.");
             errors.Add("Invalid file type. Only CSV files are allowed.");
         }
 
