@@ -17,9 +17,9 @@ public class Program
             options => options.UseSqlite(builder.Configuration.GetConnectionString("MeterReadingsDb"))
         );
 
-// Add services to the container.
-// builder.Services.AddAuthorization();
-// builder.Services.AddAntiforgery();
+        // TODO: Uncomment these lines when you want to enable authorization and antiforgery
+        // builder.Services.AddAuthorization();
+        // builder.Services.AddAntiforgery();
 
 
         builder.Services.AddScoped<IAccountDbService, AccountDbService>();
@@ -28,16 +28,14 @@ public class Program
         builder.Services.AddScoped<ICsvParser, MeterReadingCsvParser>();
         builder.Services.AddScoped<IMeterReadingService, MeterReadingService>();
         builder.Services.AddScoped<IMeterReadingDbService, MeterReadingDbService>();
-    
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+        
         builder.Services.AddOpenApi();
 
         var app = builder.Build();
 
         app.MigrateDatabase();
         app.SeedAccountsFromCsv("Test_Accounts.csv");
-
-// Configure the HTTP request pipeline.
+        
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
@@ -46,8 +44,9 @@ public class Program
 
         app.UseHttpsRedirection();
 
-// app.UseAuthorization();
-// app.UseAntiforgery();
+        // TODO: Uncomment these lines when you want to enable authorization and antiforgery
+        // app.UseAuthorization();
+        // app.UseAntiforgery();
 
         app.MapEndpoints();
 

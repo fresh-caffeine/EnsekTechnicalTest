@@ -7,6 +7,12 @@ This project is a .NET Core Web API that allows users to upload meter readings f
 - Uses a SQLite database for simplicity
 - Accounts are seeded from a CSV file (`Test_Accounts.csv`) at application startup
 
+## Notes/Assumptions on the implementation:
+- AntiForgery is disabled, to simply the API for testing purposes. in a production environment, it would be enabled. Ive added a comment in the code to highlight this.
+- Validation - I've assumed that `NNNNN` indicated that 99999 is the maximum reading for an account, I've also assumed that the reading cannot be zero or below.
+- I didn't create the client application as part of this submission, but I have provided a Scalar UI for testing the API endpoints. When running the application, you can access Scalar at `http://localhost:5045/scalar/`.
+- The Integration tests are pretty naive, I would normally prefer to containerize apis and run integration tests against them, but for the sake of simplicity, I have used the in-memory database for testing purposes.
+
 ## Project Structure
 - **Ensek.Api**: The main API project.
 - **Ensek.Api.Tests**: Contains unit tests for the API.

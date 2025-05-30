@@ -4,6 +4,7 @@ using Ensek.Api.Data;
 using Ensek.Api.Models;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Ensek.Api.IntegrationTests;
 
@@ -88,6 +89,35 @@ public class MeterReadingApiTests
             Assert.That(result.SuccessContent!.Errors, Has.Count.EqualTo(1));
             
             Assert.That(_dbContext.MeterReadings.Any(), Is.False);
+        });
+    }
+    
+    [TestCase(-1)]
+    [TestCase(0)]
+    [TestCase(100000)]
+    [TestCase(90)] // Valid but smaller than previous valid reading
+    public async Task UploadCsvFile_InvalidReadingValues_SucceedsWithFailedRows(int meterReadingValue)
+    {
+        const int accountId = 1247;
+        SeedAccount(accountId);
+        var csv = $"""
+                   AccountId,MeterReadingDateTime,MeterReadValue
+                   {accountId},22/04/2024 08:24,100
+                   {accountId},22/04/2024 08:24,{meterReadingValue}
+                   """;
+
+        var result = await CreateAndUploadCsvAsync(csv);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Response.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.OK));
+            
+            Assert.That(result.SuccessContent, Is.Not.Null);
+            Assert.That(result.SuccessContent!.SuccessRecordCount, Is.EqualTo(1));
+            Assert.That(result.SuccessContent!.FailedRecordCount, Is.EqualTo(1));
+            Assert.That(result.SuccessContent!.Errors, Has.Count.EqualTo(1));
+            
+            Assert.That(_dbContext.MeterReadings.Any(m => m.AccountId == accountId && m.ReadingValue == 100), Is.True);
         });
     }
     
