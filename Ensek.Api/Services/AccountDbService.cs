@@ -4,23 +4,18 @@ using CsvHelper.Configuration;
 using Ensek.Api.Data;
 using Ensek.Api.Mappers;
 using Ensek.Api.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Ensek.Api.Services;
 
-public interface IAccountDbService
-{
-    DbInsertResult<string> SeedAccounts(MeterReadingsDbContext context, string csvPath);
-}
-
 public class AccountDbService(
-    ILogger<AccountDbService> logger
+    ILogger<AccountDbService> logger,
+    MeterReadingsDbContext context
     ): IAccountDbService 
 {
-    public DbInsertResult<string> SeedAccounts(MeterReadingsDbContext context, string csvPath)
+    public DbInsertResult<string> SeedAccounts(string csvPath)
     {
         var result = new DbInsertResult<string>();
-        
-        
         
         if (!File.Exists(csvPath)) 
         {
@@ -60,5 +55,25 @@ public class AccountDbService(
             result.AddError($"Error occurred while seeding accounts: {e.Message}");
             return result;
         }
+    }
+    
+    public async Task<List<Account>> GetAccounts()
+    {
+        return await context.Accounts
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<Account?> GetAccountId(int accountId)
+    {
+        if (accountId <= 0)
+        {
+            logger.LogWarning("Invalid account ID: {AccountId}", accountId);
+            return null;
+        }
+        
+        return await context.Accounts
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a => a.AccountId == accountId);
     }
 }

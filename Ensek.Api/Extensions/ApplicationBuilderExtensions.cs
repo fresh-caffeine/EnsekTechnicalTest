@@ -11,6 +11,7 @@ public static class ApplicationBuilderExtensions
     {
         app.Logger.LogInformation("Mapping endpoints...");
         app.MapMeterReadingEndpoints();
+        app.MapAccountEndpoints();
     }
     
     public static WebApplication MigrateDatabase(this WebApplication app)
@@ -25,11 +26,10 @@ public static class ApplicationBuilderExtensions
     public static void SeedAccountsFromCsv(this WebApplication app, string csvFilePath)
     {
         using var scope = app.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<MeterReadingsDbContext>();
         var accountService = scope.ServiceProvider.GetRequiredService<IAccountDbService>();
         var csvPath = Path.Combine(Directory.GetCurrentDirectory(), csvFilePath);
         
-        var result = accountService.SeedAccounts(db, csvPath);
+        var result = accountService.SeedAccounts(csvPath);
         if (result.HasErrors)
         {   
             app.Logger.LogError("Failed to seed accounts from {csvFilePath}. Errors: {Errors}", 

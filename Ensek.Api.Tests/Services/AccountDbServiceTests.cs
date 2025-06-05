@@ -27,9 +27,9 @@ public class AccountDbServiceTests
     public void Seed_WhenCsvFileDoesNotExist_ReturnsFailureResult()
     {
         var context = CreateDbContext(nameof(Seed_WhenCsvFileDoesNotExist_ReturnsFailureResult));
-        var service = new AccountDbService(_loggerMock.Object);
+        var service = new AccountDbService(_loggerMock.Object, context);
         
-        var result = service.SeedAccounts(context, "nonexistent.csv");
+        var result = service.SeedAccounts( "nonexistent.csv");
       
         Assert.Multiple(() =>
         {
@@ -45,9 +45,9 @@ public class AccountDbServiceTests
         context.Accounts.Add(new Account { AccountId = 1, FirstName = "John", LastName = "Doe" });
         context.SaveChanges();
         
-        var service = new AccountDbService(_loggerMock.Object);
+        var service = new AccountDbService(_loggerMock.Object, context);
         
-        var result = service.SeedAccounts(context, Path.GetTempFileName());
+        var result = service.SeedAccounts(Path.GetTempFileName());
         
         Assert.Multiple(() =>
         {
@@ -62,9 +62,9 @@ public class AccountDbServiceTests
         var context = CreateDbContext(nameof(Seed_WhenCsvFileIsValid_SeedsAccountsAndReturnsSuccess));       
         var csvPath = CreateTempCsv("AccountId,FirstName,LastName\n1,Jane,Doe\n2,John,Smith");
 
-        var service = new AccountDbService(_loggerMock.Object);
+        var service = new AccountDbService(_loggerMock.Object, context);
         
-        var result = service.SeedAccounts(context, csvPath);
+        var result = service.SeedAccounts(csvPath);
 
         Assert.Multiple(() =>
         {
@@ -82,9 +82,9 @@ public class AccountDbServiceTests
         var csvPath = CreateTempCsv("AccountId,FirstName\n1,Jane");
         
         // Act
-        var service = new AccountDbService(_loggerMock.Object);
+        var service = new AccountDbService(_loggerMock.Object, context);
         
-        var result = service.SeedAccounts(context, csvPath);
+        var result = service.SeedAccounts(csvPath);
 
         Assert.Multiple(() =>
         {
