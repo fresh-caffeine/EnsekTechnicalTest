@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Ensek.Api.Models;
 
@@ -9,6 +10,7 @@ public class MeterReading
     public DateTime ReadingDate { get; set; }
     public decimal ReadingValue { get; set; }
     
+    [JsonIgnore]
     public Account Account { get; set; } = null!; // Navigation property to Account
   
     [NotMapped]

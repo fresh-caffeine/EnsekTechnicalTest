@@ -1,0 +1,15 @@
+{
+  "servers": {
+     "my-mcp-server": {
+         "type": "stdio",
+         "command": "dotnet",
+         "args": [
+           "run", 
+           "--project", 
+           "/Users/andyrobinson/Projects/Ensek/src/Ensek.Api.Mcp/Ensek.Api.Mcp.csproj"],
+         "env": {
+             "TOKEN": "my_tokenx"
+         }
+     }
+  }
+}

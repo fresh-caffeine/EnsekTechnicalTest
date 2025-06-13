@@ -61,10 +61,11 @@ public class AccountDbService(
     {
         return await context.Accounts
             .AsNoTracking()
+            .Include(a => a.MeterReadings)
             .ToListAsync();
     }
 
-    public async Task<Account?> GetAccountId(int accountId)
+    public async Task<Account?> GetAccountById(int accountId)
     {
         if (accountId <= 0)
         {
@@ -74,6 +75,7 @@ public class AccountDbService(
         
         return await context.Accounts
             .AsNoTracking()
+            .Include(a => a.MeterReadings)
             .FirstOrDefaultAsync(a => a.AccountId == accountId);
     }
 }

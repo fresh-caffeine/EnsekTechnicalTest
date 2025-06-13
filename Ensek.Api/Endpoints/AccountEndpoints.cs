@@ -11,7 +11,7 @@ public static class AccountEndpoints
                 int accountId, 
                 [FromServices] IAccountDbService accountDbService) =>
             {
-                var customer = await accountDbService.GetAccountId(accountId);
+                var customer = await accountDbService.GetAccountById(accountId);
                 return customer is not null ? Results.Ok(customer) : Results.NotFound();
             })
             .WithName("GetAccountById")
